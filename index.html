@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Piece Character Draw</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c2c2c; /* Darker background */
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Hide scrollbars */
+        }
+        #drawButton {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            font-size: 30px;
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        #drawButton:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        #characterDisplay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            visibility: hidden; /* Hidden initially */
+            flex-direction: row; /* Align items in a row */
+            position: relative; /* Add relative positioning */
+        }
+        #characterImage {
+            max-width: 400px; /* Increased size */
+            margin-right: 20px; /* Right margin for spacing */
+            transition: transform 1s ease-in-out;
+        }
+        #characterText {
+            font-size: 30px;
+            max-width: 400px;
+            text-align: left;
+            visibility: hidden; /* Hidden initially */
+            opacity: 0; /* Start with opacity 0 for animation */
+            transition: opacity 0.5s ease-in-out; /* Smooth transition for opacity */
+        }
+        #characterDisplay.animate #characterImage {
+            transform: translateX(-100px); /* Move the image to the left */
+        }
+        #fullscreenButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="fullscreenButton">Toggle Fullscreen</button>
+    <button id="drawButton">Draw a Character</button>
+
+    <div id="characterDisplay">
+        <img id="characterImage" class="characterImage" src="" alt="Character Image">
+        <div id="characterText"></div>
+    </div>
+
+    <script>
+        const characters = [
+            { name: "Luffy", image: "luffy.png", description: "Brave, helpful, adventurous" },
+            { name: "Zoro", image: "zoro.png", description: "Determined, strong, fierce" },
+            { name: "Nami", image: "nami.png", description: "Smart, resourceful, brave" },
+            { name: "Sanji", image: "sanji.png", description: "Kind, skillful, chivalrous" },
+            { name: "Law", image: "law.png", description: "Strategic, clever, determined" },
+            { name: "Shanks", image: "shanks.png", description: "Charismatic, strong, fearless" },
+            { name: "Whitebeard", image: "whitebeard.png", description: "Powerful, protective, fatherly" },
+            { name: "Ace", image: "ace.png", description: "Fiery, loyal, strong-willed" },
+            { name: "Robin", image: "robin.png", description: "Intelligent, resourceful, calm" },
+            { name: "Sabo", image: "sabo.png", description: "Passionate, protective, rebellious" },
+            { name: "Usopp", image: "usopp.png", description: "Creative, brave, imaginative" },
+            { name: "Chopper", image: "chopper.png", description: "Innocent, kind, determined" },
+            { name: "Jinbe", image: "jinbe.png", description: "Wise, strong, steadfast" },
+            { name: "Carrot", image: "carrot.png", description: "Playful, energetic, brave" }
+        ];
+
+        let interval;
+        let previousIndex = -1;
+        let isDrawing = false; // Added flag to prevent issues with multiple clicks
+        let isLanded = false; // New flag to check if landing is complete
+
+        const drawButton = document.getElementById('drawButton');
+        const characterDisplay = document.getElementById('characterDisplay');
+        const characterImage = document.getElementById('characterImage');
+        const characterText = document.getElementById('characterText');
+        const fullscreenButton = document.getElementById('fullscreenButton');
+
+        // Fullscreen toggle function
+        fullscreenButton.addEventListener("click", () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // Pre-set a random character before the shuffle starts
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        characterImage.src = characters[randomIndex].image;
+
+        // Draw character event
+        drawButton.addEventListener("click", () => {
+            if (isDrawing) return; // Prevent multiple clicks during draw
+            isDrawing = true; // Set flag to prevent additional clicks
+
+            drawButton.style.display = 'none'; // Hide the button after clicking
+            characterDisplay.style.visibility = 'visible'; // Show character shuffling
+            characterText.style.visibility = 'hidden'; // Hide text during shuffling
+            characterText.style.opacity = 0; // Reset opacity for the text
+            isLanded = false; // Reset landing flag
+
+            // Shuffle characters for 4 seconds
+            interval = setInterval(() => {
+                let newIndex;
+                do {
+                    newIndex = Math.floor(Math.random() * characters.length);
+                } while (newIndex === previousIndex);
+                previousIndex = newIndex;
+
+                characterImage.src = characters[newIndex].image;
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(interval);
+
+                // Final landing with animation
+                characterImage.src = characters[previousIndex].image;
+                characterText.innerHTML = `<strong>You are ${characters[previousIndex].name}.</strong><br>${characters[previousIndex].description}`;
+                characterText.style.visibility = 'visible'; // Show text after shuffling
+                characterText.style.opacity = 1; // Fade in text
+                characterDisplay.classList.add("animate"); // Trigger animation
+                isLanded = true; // Mark landing as complete
+
+                isDrawing = false; // Reset the flag to allow future draws
+            }, 4000);
+        });
+
+        // Refresh page on body click, only if landing is complete
+        document.body.addEventListener("click", () => {
+            if (isDrawing || !isLanded) return; // Don't refresh if drawing or landing is not complete
+
+            location.reload(); // Refresh the page to reset the game
+        });
+    </script>
+
+</body>
+</html>
